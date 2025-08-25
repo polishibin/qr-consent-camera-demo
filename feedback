@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Class Feedback (Demo)</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; line-height: 1.4; }
+    .card { max-width: 680px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 16px; }
+    h1 { margin-top: 0; }
+    button { padding: 10px 16px; border-radius: 12px; border: 1px solid #ccc; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+    video, canvas, img { max-width: 100%; border-radius: 12px; }
+    .note { font-size: 0.95rem; color: #444; background: #f7f7f7; padding: 12px; border-radius: 12px; }
+    .warn { color: #b00020; }
+    .footer { font-size: 0.9rem; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Feedback Demo</h1>
+    <p class="note">
+      This classroom demo shows how a normal-looking QR can lead to a site that asks for camera access.
+      <strong>Nothing is uploaded or stored.</strong> Images remain on your device and can be deleted instantly.
+    </p>
+
+    <label>
+      <input type="checkbox" id="consent" />
+      I understand and consent to temporarily enabling my camera for this demo.
+    </label>
+
+    <div style="margin: 16px 0;" class="row">
+      <button id="startBtn" disabled>Enable Camera Preview</button>
+      <button id="snapBtn" disabled>Take Snapshot</button>
+      <button id="stopBtn" disabled>Stop Camera</button>
+    </div>
+
+    <div class="row">
+      <video id="video" playsinline autoplay muted></video>
+    </div>
+
+    <h3>Snapshot</h3>
+    <p class="footer">The snapshot below is generated locally in your browser. Click “Delete Snapshot” to remove it.</p>
+    <div class="row">
+      <canvas id="canvas" hidden></canvas>
+      <img id="snapshot" alt="Your snapshot will appear here" />
+    </div>
+    <div style="margin-top: 8px;">
+      <button id="deleteBtn" disabled>Delete Snapshot</button>
+    </div>
+
+    <p class="footer" style="margin-top: 16px;">
+      Teaching point: Always verify QR destinations and be cautious granting permissions.
+    </p>
+    <p class="footer warn"><strong>Reminder:</strong> Never build or use hidden/forced camera access. Always get informed consent.</p>
+  </div>
+
+  <script>
+    const consent = document.getElementById('consent');
+    const startBtn = document.getElementById('startBtn');
+    const snapBtn = document.getElementById('snapBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snapshot = document.getElementById('snapshot');
+
+    let stream;
+
+    consent.addEventListener('change', () => {
+      startBtn.disabled = !consent.checked;
+    });
+
+    async function startCamera() {
+      try {
+        // Ask for camera only after explicit user action & consent
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+        snapBtn.disabled = false;
+        stopBtn.disabled = false;
+      } catch (err) {
+        alert("Camera access denied or unavailable: " + err.message);
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      video.srcObject = null;
+      snapBtn.disabled = true;
+      stopBtn.disabled = true;
+    }
+
+    function takeSnapshot() {
+      if (!stream) return;
+      const track = stream.getVideoTracks()[0];
+      const settings = track.getSettings();
+      const w = settings.width || 640;
+      const h = settings.height || 480;
+
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/png'); // stays local
+      snapshot.src = dataUrl;
+      deleteBtn.disabled = false;
+    }
+
+    function deleteSnapshot() {
+      snapshot.removeAttribute('src');
+      snapshot.setAttribute('alt', 'Snapshot deleted');
+      deleteBtn.disabled = true;
+    }
+
+    startBtn.addEventListener('click', startCamera);
+    snapBtn.addEventListener('click', takeSnapshot);
+    stopBtn.addEventListener('click', stopCamera);
+    deleteBtn.addEventListener('click', deleteSnapshot);
+
+    // Clean up if user navigates away
+    window.addEventListener('beforeunload', stopCamera);
+  </script>
+</body>
+</html>
