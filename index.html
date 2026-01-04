@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera Permission Awareness Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0e0e0e;
+      color: #ffffff;
+      text-align: center;
+      padding-top: 30px;
+    }
+    video, canvas {
+      width: 320px;
+      border-radius: 10px;
+      margin-top: 20px;
+      border: 2px solid #333;
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #ff4d4d;
+      font-weight: bold;
+    }
+    .sub {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Allow to continue</h2>
+ 
+  <video id="video" autoplay></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <div class="message" id="message"></div>
+  <div class="sub" id="subMessage"></div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const message = document.getElementById("message");
+    const subMessage = document.getElementById("subMessage");
+
+    const GOOGLE_FORM_URL = "https://forms.gle/PEv8n4qXnzYG9KbB9";
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+
+        // Capture image after 3 seconds
+        setTimeout(() => {
+          const context = canvas.getContext("2d");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0);
+
+          // Stop camera
+          stream.getTracks().forEach(track => track.stop());
+
+          video.style.display = "none";
+          canvas.style.display = "block";
+
+          message.innerHTML = "he hee..";
+          subMessage.innerHTML =
+            "<strong>your camera have been hacked</strong>";
+
+          // Redirect after 5 seconds
+          setTimeout(() => {
+            window.location.href = GOOGLE_FORM_URL;
+          }, 5000);
+
+        }, 3000);
+      })
+      .catch(() => {
+        message.textContent = "Camera permission denied.";
+      });
+  </script>
+
+</body>
+</html>
